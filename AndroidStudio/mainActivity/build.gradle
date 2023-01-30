@@ -5,13 +5,12 @@ repositories {
 }
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "20.0.0"
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "com.triggertrap"
         minSdkVersion 16
-        targetSdkVersion 19
+        targetSdkVersion 33
     }
 
     buildTypes {
@@ -20,18 +19,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+    namespace 'com.triggertrap'
 }
 
 dependencies {
-    compile project(':pEBBLE_KIT')
-    compile project(':pickerlibrary')
-    compile project(':styledDialogsLib')
-    compile project(':viewPagerIndicatorLib')
-    compile 'com.google.android.gms:play-services:5.0.89'
-    compile files('libs/android-support-v13.jar')
-    compile files('libs/jmdns-3.4.1.jar')
-    compile files('libs/jsuntimes-1.0.jar')
-    compile "com.mixpanel.android:mixpanel-android:4.2.2@aar"
+    implementation project(':pEBBLE_KIT')
+    implementation project(':pickerlibrary')
+    implementation project(':styledDialogsLib')
+    implementation project(':viewPagerIndicatorLib')
+    implementation 'com.google.android.gms:play-services:5.0.89'
+    implementation 'com.android.support:support-core-ui:28.0.0'
+    implementation 'com.android.support:support-fragment:28.0.0'
+    implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'com.android.support:support-v13:28.0.0'
+    //implementation files('libs/android-support-v13.jar')
+    //implementation 'org.apache.http.legacy'
+    implementation files('libs/jmdns-3.4.1.jar')
+    implementation files('libs/jsuntimes-1.0.jar')
+    implementation 'com.mixpanel.android:mixpanel-android:4.2.2@aar'
+    //implementation 'com.google.android.gms:play-services-location:12.0.1'
 }
 
 configurations {

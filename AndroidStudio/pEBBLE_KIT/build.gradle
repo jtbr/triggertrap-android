@@ -5,10 +5,11 @@ repositories {
 }
 
 android {
-    compileSdkVersion 17
-    buildToolsVersion "20.0.0"
+    compileSdkVersion 33
 
     defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 33
     }
 
     buildTypes {
@@ -17,8 +18,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+    namespace 'com.getpebble.android.kit'
 }
 
 dependencies {
-    compile 'com.google.guava:guava:14.0.1'
+    implementation 'com.google.guava:guava:14.0.1'
 }

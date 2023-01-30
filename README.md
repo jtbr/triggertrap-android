@@ -10,6 +10,12 @@ The Triggertrap system consists of 3 parts:
 
 Triggertrap is a commercial project that was conceived in 2010, launched in 2011, and ultimately went out of business in 2017. 
 
+# Build
+
+This version was built with target SDK 33 (Android 13 Tiramisu), but supports
+a minumum of SDK 16 (4.1 Jelly Bean), using current Android Studio and Gradle version
+7.6.
+
 # Credits
 
 The original software for iOS was built by Matt Kane, and it was further developed by Ross Gibson and Valentin Kalchev.
