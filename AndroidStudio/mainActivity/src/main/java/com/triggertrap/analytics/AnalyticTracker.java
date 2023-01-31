@@ -86,14 +86,16 @@ public class AnalyticTracker {
         }
 
         //push to mixpanelmanger
-        mMixpanel.track(Event.SESSION_COMPLETED, properties);
+        // TEMP: disable analytics
+        //mMixpanel.track(Event.SESSION_COMPLETED, properties);
 
         //tidy up variables
         mStartTime = null;
     }
 
     public void trackEvent(String eventName) {
-        mMixpanel.track(eventName, mProperties);
+        // TEMP: disable analytics
+        //mMixpanel.track(eventName, mProperties);
     }
 
     public void addProperty(String key, String value) {

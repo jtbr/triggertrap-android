@@ -21,7 +21,7 @@ import eu.inmite.android.lib.dialogs.SimpleDialogFragment;
 public class EmailUsDialogFrag extends SimpleDialogFragment {
 
     public void show(Activity activity) {
-        new EmailUsDialogFrag().show(activity.getFragmentManager(), "email_us");
+        //new EmailUsDialogFrag().show(activity.getFragmentManager(), "email_us");
     }
 
     @Override

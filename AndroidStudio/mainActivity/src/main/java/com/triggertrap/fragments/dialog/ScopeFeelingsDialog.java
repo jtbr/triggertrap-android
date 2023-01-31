@@ -27,7 +27,7 @@ public class ScopeFeelingsDialog extends SimpleDialogFragment {
         ScopeFeelingsDialog dialog = new ScopeFeelingsDialog();
 
         TTApp.getInstance(context).setLaunchCount(RESETCOUNTVAL);
-        dialog.show(activity.getFragmentManager(), TAG);
+        //dialog.show(activity.getFragmentManager(), TAG);
     }
 
     @Override
@@ -67,7 +67,6 @@ public class ScopeFeelingsDialog extends SimpleDialogFragment {
                 dialog.show(getActivity());
             }
         });
-
 
         return builder;
     }

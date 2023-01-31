@@ -28,13 +28,13 @@ public class ToPlayStoreDialog extends SimpleDialogFragment {
 
     public void show(Activity activity) {
         ToPlayStoreDialog dialog = new ToPlayStoreDialog();
-        dialog.show(activity.getFragmentManager(), TAG);
+//        dialog.show(activity.getFragmentManager(), TAG);
     }
 
     public void show(Activity activity, boolean b) {
         ToPlayStoreDialog dialog = new ToPlayStoreDialog();
         dialog.setIsLoveDialog(b);
-        dialog.show(activity.getFragmentManager(), TAG);
+//        dialog.show(activity.getFragmentManager(), TAG);
     }
 
     @Override
