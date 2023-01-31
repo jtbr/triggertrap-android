@@ -32,11 +32,9 @@ dependencies {
     implementation 'com.android.support:support-fragment:28.0.0'
     implementation 'com.android.support:support-v4:28.0.0'
     implementation 'com.android.support:support-v13:28.0.0'
-    //implementation files('libs/android-support-v13.jar')
-    //implementation 'org.apache.http.legacy'
     implementation files('libs/jmdns-3.4.1.jar')
     implementation files('libs/jsuntimes-1.0.jar')
-    implementation 'com.mixpanel.android:mixpanel-android:4.2.2@aar'
+    implementation 'com.mixpanel.android:mixpanel-android:7.+'
     //implementation 'com.google.android.gms:play-services-location:12.0.1'
 }
 

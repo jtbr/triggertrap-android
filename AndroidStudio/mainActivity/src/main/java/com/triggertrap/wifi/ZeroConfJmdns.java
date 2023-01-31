@@ -13,7 +13,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.bluetooth.BluetoothAdapter;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.text.format.Formatter;
@@ -40,8 +39,11 @@ public class ZeroConfJmdns implements IZeroConf, MasterServer.ServerConnectionLi
 
     private ArrayList<ServiceInfo> masters = new ArrayList<ServiceInfo>();
 
-    public ZeroConfJmdns(TriggertrapService parentService) {
+    public ZeroConfJmdns(TriggertrapService parentService,
+                         String deviceName) {
         mParentService = parentService;
+        serverName = deviceName;
+
         listener = new ServiceListener() {
 
             public void serviceResolved(ServiceEvent ev) {
@@ -52,8 +54,7 @@ public class ZeroConfJmdns implements IZeroConf, MasterServer.ServerConnectionLi
                 }
                 if (jmdnsMaster != null) {
                     if (ev.getInfo().getName().equals(serverName)) {
-                        Log.d(TAG, "Resolved own Master: " + serverName
-                                + " ingnoring");
+                        Log.d(TAG, "Resolved own Master: " + serverName + " ignoring");
                         return;
                     }
                 }
@@ -142,13 +143,10 @@ public class ZeroConfJmdns implements IZeroConf, MasterServer.ServerConnectionLi
 
     private void setupServer() throws Exception {
 
-        BluetoothAdapter bluetooth = BluetoothAdapter.getDefaultAdapter();
-        serverName = bluetooth.getName();
-        // Occasionally bluetooth name might return null, if so just give it a
-        // generic name;
         if (serverName == null) {
             serverName = TT_SERVER_NAME;
         }
+
         portNumber = masterServer.createServer();
         masterServer.setConnectionListener(ZeroConfJmdns.this);
         Log.d("ZeroConf", "Creating service info");
@@ -166,7 +164,7 @@ public class ZeroConfJmdns implements IZeroConf, MasterServer.ServerConnectionLi
 
 
     private void setupMaster() {
-        WifiManager wifi = (WifiManager) mParentService.getSystemService(android.content.Context.WIFI_SERVICE);
+        WifiManager wifi = (WifiManager) mParentService.getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
         lock = wifi.createMulticastLock("ZeroConfPluginLock");
         lock.setReferenceCounted(true);
         lock.acquire();
@@ -208,7 +206,7 @@ public class ZeroConfJmdns implements IZeroConf, MasterServer.ServerConnectionLi
 
     private void setupWatcher() {
         Log.d("ZeroConf", "Setup watcher");
-        WifiManager wifi = (WifiManager) mParentService.getSystemService(android.content.Context.WIFI_SERVICE);
+        WifiManager wifi = (WifiManager) mParentService.getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
         lock = wifi.createMulticastLock("ZeroConfPluginLock");
         lock.setReferenceCounted(true);
         lock.acquire();
@@ -216,7 +214,6 @@ public class ZeroConfJmdns implements IZeroConf, MasterServer.ServerConnectionLi
         //Need to set up the jmdns instance with IP otherwise could have problems i.e it broadcasts an IPv6 when on IPv4
         String ip = Formatter.formatIpAddress(wifi.getConnectionInfo().getIpAddress());
         new RetreiveJmDnsWatcher().execute(ip);
-
     }
 
 

@@ -9,7 +9,6 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 
-import android.bluetooth.BluetoothAdapter;
 import android.os.Handler;
 import android.util.Log;
 
@@ -18,7 +17,7 @@ public class SlaveSocket {
 
     private Handler handler = new Handler();
     public String callback;
-    public String deviceName = "Android device";
+    public String mDeviceName = "Android device";
 
     private boolean connected = false;
     private Thread thread = null;
@@ -29,8 +28,9 @@ public class SlaveSocket {
         public void onSlaveBeep();
     }
 
-    public SlaveSocket(SlaveListener listener) {
+    public SlaveSocket(SlaveListener listener, String deviceName) {
         mListener = listener;
+        mDeviceName = deviceName;
     }
 
     public void close() {
@@ -49,34 +49,22 @@ public class SlaveSocket {
 
         handler.post(new Runnable() {
             public void run() {
-                Log.d("SlaveSocket", "android.os.Build.MODEL " + android.os.Build.MODEL + " android.os.Build.PRODUCT: " + android.os.Build.PRODUCT);
-                BluetoothAdapter bluetooth = BluetoothAdapter.getDefaultAdapter();
-                if (bluetooth != null) {
-                    String name = bluetooth.getName();
-                    if (name != null) {
-                        deviceName = name;
-                    } else if (android.os.Build.MODEL != null) {
-                        deviceName = android.os.Build.MODEL;
-                    }
-                    Log.d("SlaveSocket", "btname: " + deviceName);
-                }
+                Log.d("SlaveSocket", "name: " + mDeviceName);
             }
         });
-
 
         class ClientThread implements Runnable {
 
             public void run() {
-
                 try {
                     Log.d("SlaveSocket", "Connecting to " + ipAddress);
                     InetAddress serverAddr = InetAddress.getByName(ipAddress);
                     Log.d("SlaveSocket", "C: Connecting..." + serverAddr + " port: " + serverPort);
                     socket = new Socket(serverAddr, serverPort);
                     connected = true;
-                    Log.i("SlaveSocket", "Sending command. : " + deviceName);
+                    Log.i("SlaveSocket", "Sending command. : " + mDeviceName);
                     PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-                    out.println(deviceName + "\r");
+                    out.println(mDeviceName + "\r");
                     Log.i("SlaveSocket", "Sent.");
                     sendCallback("connected");
                     while (connected) {

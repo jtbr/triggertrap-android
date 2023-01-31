@@ -1,15 +1,19 @@
 package com.triggertrap.activities;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -130,6 +134,9 @@ public class MainActivity extends Activity implements PulseSequenceListener,
     Animation mSlideUpFromBottom;
     Animation mSlideDownToBottom;
 
+    private final int AUDIO_PERMISSION_REQUEST = 666;
+    private final int LOCATION_PERMISSION_REQUEST = 667;
+
     private interface DrawerGroups {
         public static int WELCOME = 0;
         public static int CABLE_MODES = 1;
@@ -158,7 +165,6 @@ public class MainActivity extends Activity implements PulseSequenceListener,
 
             hasBeenRotated = true;
         }
-
 
         // For some reason launching from the history does not clear previous
         // intent
@@ -284,7 +290,6 @@ public class MainActivity extends Activity implements PulseSequenceListener,
     protected void onStop() {
         super.onStop();
 
-
         // Save the last shown Fragment Tag
         TTApp.getInstance(this).setLastFragmentTag(
                 mDrawerFragHandler.getCurrentFragmentTag());
@@ -295,10 +300,12 @@ public class MainActivity extends Activity implements PulseSequenceListener,
         if (isFinishing()) {
             Log.d(TAG, "MainActivity is Finishing");
         }
-        Log.d(TAG,
-                "Stopping Activity, isChangingConfigurations: "
-                        + isChangingConfigurations() + " Service state: "
-                        + mService.getState());
+        if (mService != null) {
+            Log.d(TAG,
+                    "Stopping Activity, isChangingConfigurations: "
+                            + isChangingConfigurations() + " Service state: "
+                            + mService.getState());
+        }
         // Make sure we reset the intent data
         setIntent(new Intent());
 
@@ -515,11 +522,27 @@ public class MainActivity extends Activity implements PulseSequenceListener,
             remoteTriggerModes[0] = tempRemoteTriggerModes[0];
         }
 
+        boolean distSupport = true;
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS)) {
+            // remove distance timer functionality, device does not support.
+            distSupport = false;
+        }
+        boolean soundSupport = true;
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
+            soundSupport = false;
+        }
+
         mModesGroups = getResources().getStringArray(R.array.tt_mode_groups);
         mModes.add(getResources().getStringArray(R.array.tt_welcome_modes));
         mModes.add(getResources().getStringArray(R.array.tt_cable_modes));
-        mModes.add(getResources().getStringArray(R.array.tt_timer_modes));
-        mModes.add(getResources().getStringArray(R.array.tt_sound_modes));
+        if (distSupport) {
+            mModes.add(getResources().getStringArray(R.array.tt_timer_modes));
+        } else {
+            mModes.add(getResources().getStringArray(R.array.tt_timer_modes_nodist));
+        }
+        if (soundSupport) {
+            mModes.add(getResources().getStringArray(R.array.tt_sound_modes));
+        }
         mModes.add(getResources().getStringArray(R.array.tt_hdr_modes));
         mModes.add(remoteTriggerModes);
         mModes.add(getResources().getStringArray(R.array.tt_calculator_modes));
@@ -529,10 +552,17 @@ public class MainActivity extends Activity implements PulseSequenceListener,
                 R.array.tt_welcome_modes_sub_text));
         mModesSubText.add(getResources().getStringArray(
                 R.array.tt_cable_modes_sub_text));
-        mModesSubText.add(getResources().getStringArray(
-                R.array.tt_timer_modes_sub_text));
-        mModesSubText.add(getResources().getStringArray(
-                R.array.tt_sound_modes_sub_text));
+        if (distSupport) {
+            mModesSubText.add(getResources().getStringArray(
+                    R.array.tt_timer_modes_sub_text));
+        } else {
+            mModesSubText.add(getResources().getStringArray(
+                    R.array.tt_timer_modes_sub_text_nodist));
+        }
+        if (soundSupport) {
+            mModesSubText.add(getResources().getStringArray(
+                    R.array.tt_sound_modes_sub_text));
+        }
         mModesSubText.add(getResources().getStringArray(
                 R.array.tt_hdr_modes_sub_text));
         mModesSubText.add(getResources().getStringArray(
@@ -547,11 +577,19 @@ public class MainActivity extends Activity implements PulseSequenceListener,
                 R.array.tt_welcome_mode_icons));
         mModeIcons.add(getResources().obtainTypedArray(
                 R.array.tt_cable_mode_icons));
+        if (distSupport) {
+            mModeIcons.add(getResources().obtainTypedArray(
+                    R.array.tt_timer_mode_icons));
+        } else {
+            mModeIcons.add(getResources().obtainTypedArray(
+                    R.array.tt_timer_mode_icons_nodist));
+        }
+        if (soundSupport) {
+            mModeIcons.add(getResources().obtainTypedArray(
+                    R.array.tt_sound_mode_icons));
+        }
         mModeIcons.add(getResources().obtainTypedArray(
-                R.array.tt_timer_mode_icons));
-        mModeIcons.add(getResources().obtainTypedArray(
-                R.array.tt_sound_mode_icons));
-        mModeIcons.add(getResources().obtainTypedArray(R.array.tt_hdr_mode_icons));
+                R.array.tt_hdr_mode_icons));
         mModeIcons.add(getResources().obtainTypedArray(
                 R.array.tt_remote_trigger_mode_icons));
         mModeIcons.add(getResources().obtainTypedArray(
@@ -839,7 +877,8 @@ public class MainActivity extends Activity implements PulseSequenceListener,
             // If we are showing the sound sensor make sure we are running the
             // MicVolumeMonitor
             if (ttFragment instanceof SoundSensorFragment) {
-                onStartSoundSensor();
+                Log.d(TAG, "Sound sensor fragment transient state");
+                onStartSoundSensor(); // not needed (called in transition?)
             }
 
             // If we have an inactive distance lapse make sure the Location
@@ -1301,11 +1340,40 @@ public class MainActivity extends Activity implements PulseSequenceListener,
      */
     @Override
     public void onStartSoundSensor() {
+        if (mService == null || mService.soundSensorIsRecording()) {
+            return;
+        }
+
+        // Need to first check for / request audio record permissions in modern android
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
+                    // User likely previously selected the Never Ask Again Option
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                    //TODO: multi-language (also for location)
+                    alertDialogBuilder.setTitle("Need to record audio");
+                    alertDialogBuilder
+                        .setMessage("TriggerTrap needs to use the microphone to trigger in this mode\n\n" +
+                            "You may need to configure this under Android Settings for this app")
+                        .setCancelable(true);
+                    AlertDialog alertDialog = alertDialogBuilder.create();
+                    alertDialog.show();
+                } else {
+                    Log.d(TAG, "Requesting Audio Record Permissions");
+                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, AUDIO_PERMISSION_REQUEST);
+                }
+
+                return; // sound sensor will be started in onRequestPermissionsResult (if granted)
+            }
+        }
+        doStartSoundSensor();
+    }
+
+    public void doStartSoundSensor() {
         if (mService != null) {
             mService.startSoundSensor();
             mService.resetSequenceStartStopTime();
         }
-
     }
 
     @Override
@@ -1342,7 +1410,6 @@ public class MainActivity extends Activity implements PulseSequenceListener,
         tracker.trackEvent(AnalyticTracker.Event.SEQUENCE_COMPLETED);
 
         mShotsTakenCount = 0;
-
     }
 
     @Override
@@ -1362,13 +1429,43 @@ public class MainActivity extends Activity implements PulseSequenceListener,
     /*
      * Listener for DistanceLapse Fragment
      */
-    @Override
-    public void onStartDistanceLapse(int distance) {
+    private int mRequestedDistance = 0;
+    public void doStartDistanceLapse() {
         if (mService != null) {
-            mService.startLocationUpdates(distance);
+            mService.startLocationUpdates(mRequestedDistance);
             mService.resetSequenceStartStopTime();
         }
     }
+
+    @Override
+    public void onStartDistanceLapse(int distance) {
+        mRequestedDistance = distance;
+
+        // Need to first check for / request fine location permissions in modern android
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    // User likely previously selected the Never Ask Again Option
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                    alertDialogBuilder.setTitle("Need to determine location");
+                    alertDialogBuilder
+                            .setMessage("TriggerTrap needs to use the GPS (fine location) to trigger in this mode\n\n" +
+                                    "You may need to configure this under Android Settings for this app")
+                            .setCancelable(true);
+                    AlertDialog alertDialog = alertDialogBuilder.create();
+                    alertDialog.show();
+                } else {
+                    Log.d(TAG, "Requesting Location Permissions");
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST);
+                }
+
+                return; // sound sensor will be started in onRequestPermissionsResult (if granted)
+            }
+        }
+
+        doStartDistanceLapse();
+    }
+
 
     @Override
     public void onStopDistanceLapse() {
@@ -1394,6 +1491,30 @@ public class MainActivity extends Activity implements PulseSequenceListener,
             tracker.trackEvent(AnalyticTracker.Event.SEQUENCE_COMPLETED);
         }
     }
+
+    /** Called with the result after requesting user permissions */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case AUDIO_PERMISSION_REQUEST:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    doStartSoundSensor();
+                } else {
+                    Log.i(TAG, "Audio record permission NOT GRANTED. No recording started.");
+                }
+                break;
+            case LOCATION_PERMISSION_REQUEST:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    doStartDistanceLapse();
+                } else {
+                    Log.i(TAG, "Fine Location permission NOT GRANTED.");
+                }
+                break;
+        }
+    };
+
 
     /**
      * Listeners for the Triggertrap service
@@ -2117,12 +2238,11 @@ public class MainActivity extends Activity implements PulseSequenceListener,
     @Override
     public void onStartWifiMaster() {
         mService.registerWifiMaster();
-
     }
 
     @Override
     public void onStopWifiMaster() {
-        mService.unRegsiterMaster();
+        mService.unRegisterMaster();
     }
 
     @Override

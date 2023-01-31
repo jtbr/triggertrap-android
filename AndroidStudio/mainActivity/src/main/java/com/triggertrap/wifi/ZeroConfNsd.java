@@ -14,9 +14,12 @@ import android.util.Log;
 
 import com.triggertrap.service.TriggertrapService;
 
-public class ZeroConfNds implements IZeroConf {
+// Network service discovery
+// (Apparently unfinished, unused) See https://developer.android.com/training/connect-devices-wirelessly/nsd.html
+// (NOTE: could implement IZeroConf using bluetooth alone, no wifi)
+public class ZeroConfNsd implements IZeroConf {
 
-    private static final String TAG = ZeroConfNds.class.getSimpleName();
+    private static final String TAG = ZeroConfNsd.class.getSimpleName();
     private static final String TT_SERVICE_TYPE = "_triggertrap._tcp.";
     public static int SERVICE_RESOLVED = 0;
     public static int SERVICE_LOST = 1;
@@ -39,26 +42,24 @@ public class ZeroConfNds implements IZeroConf {
             String resolvedServiceName = serviceInfo.getServiceName();
             int resovledServicePort = serviceInfo.getPort();
 
-            if (msg.what == ZeroConfNds.SERVICE_RESOLVED) {
+            if (msg.what == ZeroConfNsd.SERVICE_RESOLVED) {
                 Log.d(TAG, "mParentService.wiFiMasterAdded");
                 resolvedServiceName = resolvedServiceName.replaceAll("032", " ");
                 resolvedServiceName = resolvedServiceName.replaceAll("\\\\", "");
                 mParentService.wiFiMasterAdded(resolvedServiceName, resovledServiceIP, resovledServicePort);
             }
-            if (msg.what == ZeroConfNds.SERVICE_LOST) {
+            if (msg.what == ZeroConfNsd.SERVICE_LOST) {
                 Log.d(TAG, "mParentService.wiFiMasterLost");
                 mParentService.wiFiMasterRemoved(resolvedServiceName, resovledServiceIP, resovledServicePort);
             }
         }
 
-        ;
     };
 
-    public ZeroConfNds(TriggertrapService parentService) {
+    public ZeroConfNsd(TriggertrapService parentService) {
         mParentService = parentService;
         mNsdManager = (NsdManager) parentService.getSystemService(Context.NSD_SERVICE);
     }
-
 
     public void setupResolveListener() {
         mResolveListener = new NsdManager.ResolveListener() {
@@ -80,7 +81,7 @@ public class ZeroConfNds implements IZeroConf {
 
                 //Handle on UI thread
                 Message message = handler.obtainMessage();
-                message.what = ZeroConfNds.SERVICE_RESOLVED;
+                message.what = ZeroConfNsd.SERVICE_RESOLVED;
                 message.obj = serviceInfo;
                 handler.sendMessage(message);
             }
@@ -121,7 +122,7 @@ public class ZeroConfNds implements IZeroConf {
                 Log.e(TAG, "service lost" + serviceInfo);
                 //Handle on UI thread
                 Message message = handler.obtainMessage();
-                message.what = ZeroConfNds.SERVICE_LOST;
+                message.what = ZeroConfNsd.SERVICE_LOST;
                 message.obj = serviceInfo;
                 handler.sendMessage(message);
             }

@@ -245,7 +245,7 @@ public class TriggertrapService extends Service implements OutputListener,
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0,
                 new Intent(STOP_SERVICE_ACTION),
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         mRemoteViews.setOnClickPendingIntent(R.id.stopService, pendingIntent);
         // mRemoteViews.setBoolean(R.id.notificationDescription,"setSelected",
         // true);
@@ -262,7 +262,7 @@ public class TriggertrapService extends Service implements OutputListener,
         // .setContentTitle("Triggertrap");
 
         // TODO Create a factory here to get Correct ZeroConf Implementation
-        mZeroConf = new ZeroConfJmdns(this);
+        mZeroConf = new ZeroConfJmdns(this, getDeviceName());
         // mZeroConf = new ZeroConfNds(this);
         mMicVolumeMonitor = new MicVolumeMonitor(this);
 
@@ -1072,6 +1072,10 @@ public class TriggertrapService extends Service implements OutputListener,
         }
     }
 
+    public boolean soundSensorIsRecording() {
+        return mMicVolumeMonitor.isRecording();
+    }
+
     public void enableSoundThreshold() {
         if (checkInProgressState()) {
             return;
@@ -1229,7 +1233,7 @@ public class TriggertrapService extends Service implements OutputListener,
         registerMasterTask.execute();
     }
 
-    public void unRegsiterMaster() {
+    public void unRegisterMaster() {
         AsyncTask<Void, Void, Void> unregisterMasterTask = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
@@ -1266,10 +1270,42 @@ public class TriggertrapService extends Service implements OutputListener,
         mListener.onClientDisconnected(name, uniqueName);
     }
 
+    private String capitalize(String s) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        char first = s.charAt(0);
+        if (Character.isUpperCase(first)) {
+            return s;
+        } else {
+            return Character.toUpperCase(first) + s.substring(1);
+        }
+    }
+
+    // Return the name of this device. Harder than it should be.
+    public String getDeviceName() {
+        String name = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            name = android.provider.Settings.Global.getString(getContentResolver(), "device_name");
+        } else {
+            name = android.provider.Settings.Secure.getString(getContentResolver(), "bluetooth_name");
+        }
+        if (name == null || name.length() == 0) {
+            String manufacturer = android.os.Build.MANUFACTURER;
+            String model = android.os.Build.MODEL;
+            if (model.startsWith(manufacturer)) {
+                name = capitalize(model);
+            } else {
+                name = capitalize(manufacturer) + " " + model;
+            }
+        }
+        return name.replace(' ', '_');
+    }
+
     public void connectToMaster(String name, String ipAddress, int port) {
         Log.d(TAG, "Connect to master");
         if (mSlaveSocket == null) {
-            mSlaveSocket = new SlaveSocket(this);
+            mSlaveSocket = new SlaveSocket(this, getDeviceName());
         } else {
             mSlaveSocket.close();
         }
@@ -1402,7 +1438,11 @@ public class TriggertrapService extends Service implements OutputListener,
     }
 
     public Calendar getSequenceStartStopTime(){
-        return mSequenceStartStopTime;
+        if (mSequenceStartStopTime != null) {
+            return mSequenceStartStopTime;
+        } else {
+            return Calendar.getInstance();
+        }
     }
 
 

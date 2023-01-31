@@ -36,6 +36,12 @@
         <item>@string/star_trail</item>
         <item>@string/bramping</item>
     </string-array>
+    <string-array name="tt_timer_modes_nodist">
+        <item>@string/timelapse</item>
+        <item>@string/timewarp</item>
+        <item>@string/star_trail</item>
+        <item>@string/bramping</item>
+    </string-array>
     <string-array name="tt_sound_modes">
         <item>@string/sound_sensor</item>
     </string-array>
@@ -70,6 +76,12 @@
         <item>@string/travel_through_time</item>
         <item>@string/timelapse_with_acceleration</item>
         <item>@string/perfect_for_roadtrips</item>
+        <item>@string/extreme_exposure_control</item>
+        <item>@string/bulb_ramping_timelapse</item>
+    </string-array>
+    <string-array name="tt_timer_modes_sub_text_nodist">
+        <item>@string/travel_through_time</item>
+        <item>@string/timelapse_with_acceleration</item>
         <item>@string/extreme_exposure_control</item>
         <item>@string/bulb_ramping_timelapse</item>
     </string-array>
@@ -476,6 +488,12 @@
         <item>@drawable/icon_stopwatch</item>
         <item>@drawable/icon_wave</item>
         <item>@drawable/icon_compass</item>
+        <item>@drawable/icon_star</item>
+        <item>@drawable/icon_brightness_contrast</item>
+    </string-array>
+    <string-array name="tt_timer_mode_icons_nodist">
+        <item>@drawable/icon_stopwatch</item>
+        <item>@drawable/icon_wave</item>
         <item>@drawable/icon_star</item>
         <item>@drawable/icon_brightness_contrast</item>
     </string-array>

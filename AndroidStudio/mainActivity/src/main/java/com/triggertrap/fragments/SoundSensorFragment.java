@@ -193,7 +193,12 @@ public class SoundSensorFragment extends TriggertrapFragment implements VolumeLi
     public void onStart() {
         Log.d(TAG, "onstart");
         super.onStart();
-        startVolumeMonitor();
+//        startVolumeMonitor(); // not needed, started in setFragmentTransientState
+        if (mListener != null) {
+            // initialize thresholds as displayed on GUI (from last time)
+            mListener.onSetSoundThreshold(mThresholdProgress);
+            mListener.onSetMicSensitivity(mMicSensitivity.getProgress());
+        }
     }
 
     @Override

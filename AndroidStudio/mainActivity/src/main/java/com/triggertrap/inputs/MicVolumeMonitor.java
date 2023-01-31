@@ -1,9 +1,11 @@
 package com.triggertrap.inputs;
 
+import android.annotation.SuppressLint;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Handler;
+import android.util.Log;
 
 import com.triggertrap.TTApp;
 
@@ -19,7 +21,7 @@ public class MicVolumeMonitor {
 
     public static final int SAMPLE_RATE = 16000;
 
-    private AudioRecord mRecorder;
+    private AudioRecord mRecorder = null;
     private int mVolumeRange = DEFAULT_VOL_RANGE;
     private int mThreshold = (DEFAULT_VOL_RANGE / 2);
     private short[] mBuffer;
@@ -34,9 +36,11 @@ public class MicVolumeMonitor {
         initRecorder();
     }
 
+    public boolean isRecording() { return mIsRecording; }
+
     public MicVolumeMonitor(VolumeListener listener) {
-        initRecorder();
         mListener = listener;
+        // initialize recorder at start, after we have permissions
     }
 
     public interface VolumeListener {
@@ -45,17 +49,20 @@ public class MicVolumeMonitor {
         public void onExceedThreshold(int amplitude);
     }
 
+    @SuppressLint("MissingPermission") // permission is requested in MainActivity and this is not called if not granted
     private void initRecorder() {
         int bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT);
         if (bufferSize > 0) {
             mBuffer = new short[bufferSize];
-//		Log.d(TAG, "Min IN Buffer size bytes  is: " + bufferSize);
-//		Log.d(TAG, "Min IN Buffer size samples is: " + bufferSize / 2);
-//		Log.d(TAG, "Min IN Buffer in secs: " + ((float) bufferSize / 2) / 44100);
+//  		Log.d(TAG, "Min IN Buffer size bytes  is: " + bufferSize);
+//	    	Log.d(TAG, "Min IN Buffer size samples is: " + bufferSize / 2);
+		    Log.d(TAG, "Min IN Buffer in secs: " + ((float) bufferSize / 2) / SAMPLE_RATE);
 
             mRecorder = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT, bufferSize);
+        } else {
+            Log.w(TAG, "No Min IN Buffer size! Recorder not initialized!");
         }
     }
 
@@ -111,6 +118,11 @@ public class MicVolumeMonitor {
 
     public void start() {
         if (mIsRecording == false) {
+            if (mBuffer == null) {
+                initRecorder();
+            }
+            assert (mRecorder != null || mRecorder.getState() == AudioRecord.STATE_INITIALIZED);
+
             mIsRecording = true;
             mRecorder.startRecording();
             startBufferedRead();
@@ -137,7 +149,9 @@ public class MicVolumeMonitor {
     }
 
     public void release() {
-        mRecorder.release();
+        if (mBuffer != null && mRecorder != null) {
+            mRecorder.release();
+        }
     }
 
     public void setMicSensitivity(float percentage) {

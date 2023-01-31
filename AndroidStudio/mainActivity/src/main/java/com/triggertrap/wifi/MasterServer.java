@@ -16,8 +16,6 @@ import android.os.Handler;
 import android.util.Log;
 
 public class MasterServer {
-
-
     private static MasterServer instance = null;
     private static final String TAG = MasterServer.class.getSimpleName();
     private final String BEEP_STRING = "BEEP\r\n";
@@ -64,6 +62,7 @@ public class MasterServer {
             startListening();
         } catch (IOException e) {
             e.printStackTrace();
+            serverSocket = null;
         }
         return serverPort;
     }
@@ -74,16 +73,20 @@ public class MasterServer {
             public void run() {
                 while (isListening) {
                     try {
-                        Log.d(TAG, "Listening for client Socket");
-                        final Socket clientSocket = serverSocket.accept();
-                        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                        final String line = in.readLine();
-                        Log.d(TAG, "Recieved Connection from device: " + line);
-                        handler.post(new Runnable() {
-                            public void run() {
-                                gotClientConnection(clientSocket, line);
-                            }
-                        });
+                        if (serverSocket != null && !serverSocket.isClosed()) {
+                            Log.d(TAG, "Server socket open. Listening for clients ...");
+                            final Socket clientSocket = serverSocket.accept();
+                            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                            final String line = in.readLine();
+                            Log.d(TAG, "Received Connection from device: " + line);
+                            handler.post(new Runnable() {
+                                public void run() {
+                                    gotClientConnection(clientSocket, line);
+                                }
+                            });
+                        } else {
+                            Log.e(TAG, "Socket not open attempting to start listening");
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -217,14 +220,19 @@ public class MasterServer {
     public void close() {
         isListening = false;
         try {
-
-            for (DisconnectListeningThread disconnectListeningThread : disconnectListenerThreads) {
-                disconnectListeningThread.stopListening();
+            if (disconnectListenerThreads != null) {
+                for (DisconnectListeningThread disconnectListeningThread : disconnectListenerThreads) {
+                    disconnectListeningThread.stopListening();
+                }
             }
-            for (Socket clientSocket : clientSockets) {
-                clientSocket.close();
+            if (clientSockets != null) {
+                for (Socket clientSocket : clientSockets) {
+                    clientSocket.close();
+                }
             }
-            serverSocket.close();
+            if (serverSocket != null) {
+                serverSocket.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

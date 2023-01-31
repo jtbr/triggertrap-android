@@ -283,7 +283,6 @@ public class WifiMasterFragment extends TriggertrapFragment {
         mMasterInfoView.startAnimation(mSlideOutToTop);
         mMasterInfoView.setVisibility(View.GONE);
         mMasterConnectProgress.setVisibility(View.VISIBLE);
-
     }
 
     public void stopWifiMaster() {

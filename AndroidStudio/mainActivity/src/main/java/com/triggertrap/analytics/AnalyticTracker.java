@@ -63,7 +63,7 @@ public class AnalyticTracker {
 
     public void startSession() {
 
-        mMixpanel = MixpanelAPI.getInstance(mContext, PRODUCTION_KEY);
+        mMixpanel = MixpanelAPI.getInstance(mContext, PRODUCTION_KEY, true);
 
         mStartTime = Calendar.getInstance();
     }
